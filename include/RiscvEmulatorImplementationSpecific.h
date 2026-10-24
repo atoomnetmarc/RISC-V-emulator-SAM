@@ -50,8 +50,9 @@ extern inline void RiscvEmulatorStore(uint32_t address, const void *source, uint
     }
 
     if (address == UART_ORIGIN) {
+        const uint8_t *bytes = (const uint8_t *)source;
         for (uint8_t i = 0; i < length; i++) {
-            SerialUSB.write(*(uint8_t *)(source + i));
+            SerialUSB.write(bytes[i]);
         }
     }
     return;

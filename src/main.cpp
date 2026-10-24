@@ -6,7 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 #include <Arduino.h>
-#include <Wire.h>
 
 #include <RiscvEmulator.h>
 
