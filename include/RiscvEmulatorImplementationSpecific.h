@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 */
 
+#include <stdbool.h>
 #include <string.h>
 
 #include <RiscvEmulatorDefine.h>
@@ -22,18 +23,21 @@ SPDX-License-Identifier: Apache-2.0
  * @param address The byte address in memory.
  * @param destination The destination address to copy the data to.
  * @param length The length in bytes of the data.
+ * @return true when the address is mapped, false otherwise.
  */
-extern inline void RiscvEmulatorLoad(uint32_t address, void *destination, uint8_t length) {
+extern inline bool RiscvEmulatorLoad(uint32_t address, void *destination, uint8_t length) {
 
     if (address >= RAM_ORIGIN) {
         memcpy(destination, &memory[address - RAM_ORIGIN], length);
-        return;
+        return true;
     }
 
     if (address >= ROM_ORIGIN) {
         memcpy(destination, &firmware[address - ROM_ORIGIN], length);
-        return;
+        return true;
     }
+
+    return false;
 }
 
 /**
@@ -42,11 +46,12 @@ extern inline void RiscvEmulatorLoad(uint32_t address, void *destination, uint8_
  * @param address The byte address in memory.
  * @param destination The destination address to copy the data to.
  * @param length The length in bytes of the data.
+ * @return true when the address is mapped, false otherwise.
  */
-extern inline void RiscvEmulatorStore(uint32_t address, const void *source, uint8_t length) {
+extern inline bool RiscvEmulatorStore(uint32_t address, const void *source, uint8_t length) {
     if (address >= RAM_ORIGIN) {
         memcpy(&memory[address - RAM_ORIGIN], source, length);
-        return;
+        return true;
     }
 
     if (address == UART_ORIGIN) {
@@ -54,8 +59,10 @@ extern inline void RiscvEmulatorStore(uint32_t address, const void *source, uint
         for (uint8_t i = 0; i < length; i++) {
             SerialUSB.write(bytes[i]);
         }
+        return true;
     }
-    return;
+
+    return false;
 }
 
 /**
@@ -71,17 +78,15 @@ extern inline void RiscvEmulatorIllegalInstruction(RiscvEmulatorState_t *state) 
 }
 
 /**
- * Handles a fault where the CSR is not recognized.
- */
-extern inline void RiscvEmulatorUnknownCSR(RiscvEmulatorState_t *state) {
-    for (;;) {
-    };
-}
-
-/**
  * Handles an ECALL.
  */
 extern inline void RiscvEmulatorHandleECALL(RiscvEmulatorState_t *state) {
+#if (RVE_E_ZICSR == 1)
+    if (state->csr.mtvec.base != 0) {
+        return;
+    }
+#endif
+
     for (;;) {
     };
 }
